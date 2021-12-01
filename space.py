@@ -3,6 +3,7 @@ from datetime import time
 
 import pygame  # necessaire pour charger les images et les sons
 import random
+import pickle
 import time
 td = pygame.time.Clock().tick(130)
 
@@ -12,7 +13,7 @@ class Button():
         font = pygame.font.SysFont('cambria', 30, True)
         self.img = img
         if text != None:
-            self.text = font.render(text, True, [255, 255, 255], [0, 0, 0])
+            self.text = font.render(text, True, [255, 255, 255], [20, 40  , 200])
             self.size = self.text.get_size()
         else:
             self.text = None
@@ -90,19 +91,22 @@ class Joueur() : # classe pour créer le vaisseau du joueur
 
         self.tirs = []
 
+        f = open('data.pirate', 'r')
+        self.bestScore = int(f.read())
+
     def systemeTir(self, ennemis):
         for idEnnemi, ennemi in enumerate(ennemis):
             ennemi.playerTouch(self)
             for idTir, tir in enumerate(self.tirs):
+                pos = [tir.pos[0] - (len(self.tirs[idTir].death) // 2 * 50), tir.pos[1]]
+                for bulletdeath in self.tirs[idTir].death:
+                    self.tirs.append(Balle(pos, bulletdeath, self.ballImg[bulletdeath]))
+                    pos = [pos[0] + 50, pos[1]]
                 if tir.toucher(ennemi):
                     if ennemi.hp <= 0:
                         del ennemis[idEnnemi]
                         self.marquer()
-                        datas = {
-                            'player': self,
-                            'ennemis': ennemis,
-                        }
-                    if tir.type in [1, 4]:
+                    if tir.type in [1, 2]:
                         del self.tirs[idTir]
                         break
 
@@ -112,39 +116,42 @@ class Joueur() : # classe pour créer le vaisseau du joueur
 
     def changeBallTypes(self, unity):
         newBallType = self.ballType + unity
-        while newBallType == self.ballType:
+        while newBallType != self.ballType:
+            if newBallType < 1 : newBallType = len(self.reloads)
+            if newBallType > len(self.reloads): newBallType = 1
             if self.reloads[newBallType] > 0:
                 self.ballType = newBallType
                 break
-            if newBallType < 0 : newBallType = len(self.reloads)
-            if newBallType > len(self.reloads): 0
-        print(self.ballType + ' '+ newBallType)
+            newBallType += unity
 
     def tirer(self):
         if self.reloads[self.ballType] > 0 and self.lastAttack + self.attacksSpeed[self.ballType] <= pygame.time.get_ticks():
             self.reloads[self.ballType] -=1
             self.lastAttack = pygame.time.get_ticks()
-            self.tirs.append(Balle(self, self.ballType, self.ballImg[self.ballType]))
-            print(self.reloads[self.ballType])
+            self.tirs.append(Balle(self.pos, self.ballType, self.ballImg[self.ballType]))
 
         else: return False
 
     def marquer(self):
         self.score += 1
+        if self.bestScore < self.score:
+            self.bestScore = self.score
 
 class Balle():
     """docstring for ClassName"""
-    def __init__(self,joueur, type ,img):
+    def __init__(self,pos, type ,img):
         damages = {
-            1: 100,
+            1: 150,
             2: 150,
             3: 300,
         }
         self.img = img
-        self.pos = [joueur.pos[0]+16, joueur.pos[1 ]]
-        self.joueur = joueur
+        self.pos = [pos[0]+16 , pos[1]]
         self.damage = damages[type]
         self.type = type
+        if self.type == 2:
+            self.death = [1, 1, 1]
+        else: self.death = []
         self.EnnemisTouch = []
 
     def bouger(self):
@@ -165,13 +172,19 @@ class Balle():
 class Ennemi():
     """docstring for ClassName"""
     NbEnnemis = 10
-    def __init__(self):
-        self.pos = [random.randint(100,700), -50]
-        self.type = random.randint(1,2)
-        self.img = pygame.transform.scale(pygame.image.load("invader1.png"), (64,64))
-        self.hpMax = 400
-        self.hp = 400
+    def __init__(self, ennemiType):
+        self.pos = [random.randint(100,700), random.randint(-300, -50)]
+        self.type = ennemiType
+        self.hps = [300, 500, 700]
+        self.velocities = [0.2, 0.1, 0.05]
+        self.imgs = [pygame.transform.rotate(pygame.transform.scale(pygame.image.load("invader1.png"), (64,64)), 90), pygame.transform.rotate(pygame.transform.scale(pygame.image.load("invader2.png"), (64,64)), 90), pygame.transform.rotate(pygame.transform.scale(pygame.image.load("invader3.png"), (64,64)), 90)]
+        self.img = self.imgs[self.type]
+        self.hpMax = self.hps[self.type]
+        self.hp = self.hpMax
         self.vitesse = 0.2
+
+    def __repr__(self):
+        return '<ENNEMIS type : ' + str(self.type) + ' hp : ' + str(self.hp) + '>'
 
     def avancer(self):
         self.pos[1] += self.vitesse * td
