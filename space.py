@@ -7,6 +7,7 @@ import pickle
 import time
 td = pygame.time.Clock().tick(130)
 
+pygame.mixer.init()
 class Button():
     def __init__(self, pos:tuple = [0,0], text:str = None, img = None, size:tuple = None):
         self.size = size
@@ -96,17 +97,18 @@ class Joueur() : # classe pour créer le vaisseau du joueur
 
     def systemeTir(self, ennemis):
         for idEnnemi, ennemi in enumerate(ennemis):
-            ennemi.playerTouch(self)
             for idTir, tir in enumerate(self.tirs):
                 pos = [tir.pos[0] - (len(self.tirs[idTir].death) // 2 * 50), tir.pos[1]]
-                for bulletdeath in self.tirs[idTir].death:
-                    self.tirs.append(Balle(pos, bulletdeath, self.ballImg[bulletdeath]))
-                    pos = [pos[0] + 50, pos[1]]
                 if tir.toucher(ennemi):
                     if ennemi.hp <= 0:
                         del ennemis[idEnnemi]
                         self.marquer()
                     if tir.type in [1, 2]:
+                        pygame.mixer.Sound("touch.wav").play()
+                        if tir.type == 2:
+                            for bulletdeath in self.tirs[idTir].death:
+                                self.tirs.append(Balle(pos, bulletdeath, self.ballImg[bulletdeath]))
+                                pos = [pos[0] + 50, pos[1]]
                         del self.tirs[idTir]
                         break
 
@@ -116,7 +118,8 @@ class Joueur() : # classe pour créer le vaisseau du joueur
 
     def changeBallTypes(self, unity):
         newBallType = self.ballType + unity
-        while newBallType != self.ballType:
+
+        for a in range(len(self.reloads)):
             if newBallType < 1 : newBallType = len(self.reloads)
             if newBallType > len(self.reloads): newBallType = 1
             if self.reloads[newBallType] > 0:
@@ -145,6 +148,12 @@ class Balle():
             2: 150,
             3: 300,
         }
+        soud = {
+            1: pygame.mixer.Sound("gun.wav"),
+            2: pygame.mixer.Sound("canon.wav"),
+            3: pygame.mixer.Sound("anchor.wav"),
+        }
+        soud[type].play()
         self.img = img
         self.pos = [pos[0]+16 , pos[1]]
         self.damage = damages[type]
@@ -190,10 +199,6 @@ class Ennemi():
         self.pos[1] += self.vitesse * td
         if self.pos[1] > 600:return True
         else: return False
-
-    def playerTouch(self, player):
-        if objsTouch(self, player):
-            del player
 
     def hurt(self, damage):
         if self.hp - damage <= 0:

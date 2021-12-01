@@ -4,14 +4,23 @@ from builtins import print, property
 import pygame # importation de la librairie pygame
 import space
 import sys # pour fermer correctement l'application
-import pickle
+
+def pauseSytem():
+    global isPaused
+    pygame.mixer.Sound("pause.wav").play()
+    isPaused = not isPaused
+    if isPaused:
+        pygame.mixer.music.load('musicMenu.mp3')
+    else: pygame.mixer.music.load('musicGame.mp3')
+    pygame.mixer.music.play(-1)
+
 
 # lancement des modules inclus dans pygame
 pygame.init() 
 
 # création d'une fenêtre de 800 par 600
 screen = pygame.display.set_mode((800,600))
-pygame.display.set_caption("Space Cake Invaders")
+pygame.display.set_caption("Marins Invader")
 # chargement de l'image de fond
 fond = pygame.image.load('background.png')
 
@@ -46,6 +55,10 @@ btnLeave = space.Button([screen.get_size()[0]//2,screen.get_size()[1]//1.5], 'le
 
 gameover = False
 
+pygame.mixer.music.load('musicMenu.mp3')
+pygame.mixer.music.play(-1)
+
+
 for indice in waves[0]:
     nb = waves[0][indice]
     print(nb)
@@ -64,7 +77,7 @@ while running : # boucle infinie pour laisser la fenêtre ouverte
     # dessin du fond
     screen.blit(fond,(0,0))
     if bonusTime <= pygame.time.get_ticks():
-        bonusTime = pygame.time.get_ticks() + random.randint(4000, 9000)
+        bonusTime = pygame.time.get_ticks() + random.randint(2000, 5000)
         bonus.append(space.Bonus(player.ballImg))
 
 
@@ -88,8 +101,8 @@ while running : # boucle infinie pour laisser la fenêtre ouverte
                 player.changeBallTypes(-1)
             if event.key == pygame.K_SPACE : # espace pour tirer
                 player.tirer()
-            if event.key == pygame.K_ESCAPE:
-                pause = not pause
+                if isPaused :pauseSytem()
+            if event.key == pygame.K_ESCAPE:pauseSytem()
 
         else:
             player.sens=0
@@ -116,6 +129,7 @@ while running : # boucle infinie pour laisser la fenêtre ouverte
         for ennemi in listeEnnemis:
             if ennemi.avancer():
                 player.score -= 2
+                pygame.mixer.Sound("hurt.wav").play()
             else: temp.append(ennemi)
             screen.blit(ennemi.img,ennemi.pos) # appel de la fonction qui dessine le vaisseau du joueur
             pygame.draw.rect(screen, (100, 100, 100), (ennemi.pos[0], ennemi.pos[1] + ennemi.img.get_size()[1], ennemi.img.get_size()[0], 5))
