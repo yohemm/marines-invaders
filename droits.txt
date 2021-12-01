@@ -1,0 +1,11 @@
+background.png (800x800)
+
+vaisseau.png (64x64)
+
+balle.png (32x32)
+
+invader1.png (64x64)
+
+invader2.png (64x64)
+
+
