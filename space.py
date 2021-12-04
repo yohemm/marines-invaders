@@ -37,7 +37,7 @@ class Bonus():
             3 : [1, 5]
         }
         self.pos = [random.randint(20, 780), -20]
-        self.bonus = random.randint(2,3)
+        self.bonus = random.randint(1,3)
         self.quantity = random.choice(nbReload[self.bonus])
         self.velocity = 0.9
         self.img = imgDict[self.bonus]
@@ -57,7 +57,11 @@ class Bonus():
 
 class Joueur() : # classe pour créer le vaisseau du joueur
     def __init__(self) :
-        self.sens = 1
+        self.velovityMax = 6
+        self.speed = 0.2
+        self.velovity = 0
+        self.rightPressed = False
+        self.leftPressed = False
         self.img = pygame.transform.flip(pygame.transform.scale(pygame.image.load("vaisseau.png"), (100,100)), False, True)
         self.pos = (400, 500)
         self.score = 0
@@ -112,9 +116,21 @@ class Joueur() : # classe pour créer le vaisseau du joueur
                         del self.tirs[idTir]
                         break
 
-    def deplacer(self):
-        if 0 <= self.pos[0] + 1 * self.sens*td <= 800 - self.img.get_width():
-            self.pos = [self.pos[0] + 1 * self.sens*td, self.pos[1]]
+    def update(self):
+        if self.rightPressed and not self.leftPressed:
+            self.velovity += self.speed * td
+            if self.velovity >= self.velovityMax:
+                self.velovity = self.velovityMax
+        if not self.rightPressed and self.leftPressed:
+            self.velovity -= self.speed
+            if self.velovity <= - self.velovityMax:
+                self.velovity = - self.velovityMax
+        if not self.rightPressed and not self.leftPressed:
+            if self.velovity < 0:self.velovity += self.speed
+            elif self.velovity > 0:self.velovity -= self.speed
+
+        if 800 > self.pos[0] + int(self.velovity) > 0:
+            self.pos = [self.pos[0] + self.velovity, self.pos[1]]
 
     def changeBallTypes(self, unity):
         newBallType = self.ballType + unity

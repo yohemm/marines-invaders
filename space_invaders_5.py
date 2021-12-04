@@ -79,6 +79,7 @@ while running : # boucle infinie pour laisser la fenêtre ouverte
     if bonusTime <= pygame.time.get_ticks():
         bonusTime = pygame.time.get_ticks() + random.randint(2000, 5000)
         bonus.append(space.Bonus(player.ballImg))
+        print(bonus)
 
 
     ### Gestion des événements  ###
@@ -90,11 +91,16 @@ while running : # boucle infinie pour laisser la fenêtre ouverte
             sys.exit() # pour fermer correctement
 
        # gestion du clavier
+        if event.type == pygame.KEYUP : # si une touche a été tapée KEYUP quand on relache la touche
+            if event.key == pygame.K_LEFT : # si la touche est la fleche gauche
+                player.leftPressed = False
+            if event.key == pygame.K_RIGHT : # si la touche est la fleche droite
+                player.rightPressed = False
         if event.type == pygame.KEYDOWN : # si une touche a été tapée KEYUP quand on relache la touche
             if event.key == pygame.K_LEFT : # si la touche est la fleche gauche
-                player.sens = -1 # on déplace le vaisseau de 1 pixel sur la gauche
+                player.leftPressed = True
             if event.key == pygame.K_RIGHT : # si la touche est la fleche droite
-                player.sens = 1 # on déplace le vaisseau de 1 pixel sur la gauche
+                player.rightPressed = True
             if event.key == pygame.K_UP:
                 player.changeBallTypes(1)
             if event.key == pygame.K_DOWN:
@@ -114,7 +120,7 @@ while running : # boucle infinie pour laisser la fenêtre ouverte
         player.systemeTir(listeEnnemis)
         # placement des objets
         # le joueur
-        player.deplacer() # appel de la fonction qui dessine le vaisseau du joueur
+        player.update() # appel de la fonction qui dessine le vaisseau du joueur
         # la balle
         for id in range(len(player.tirs)):
             tir = player.tirs[id]
