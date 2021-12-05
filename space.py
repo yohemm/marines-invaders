@@ -14,7 +14,7 @@ class Button():
         font = pygame.font.SysFont('cambria', 30, True)
         self.img = img
         if text != None:
-            self.text = font.render(text, True, [255, 255, 255], [20, 40  , 200])
+            self.text = font.render(text, True, [255, 255, 255], [20, 40 , 200])
             self.size = self.text.get_size()
         else:
             self.text = None
@@ -129,8 +129,9 @@ class Joueur() : # classe pour créer le vaisseau du joueur
             if self.velovity < 0:self.velovity += self.speed
             elif self.velovity > 0:self.velovity -= self.speed
 
-        if 800 > self.pos[0] + int(self.velovity) > 0:
+        if 800 - self.img.get_width() > self.pos[0] + self.velovity > 0:
             self.pos = [self.pos[0] + self.velovity, self.pos[1]]
+        else: self.velovity = 0
 
     def changeBallTypes(self, unity):
         newBallType = self.ballType + unity

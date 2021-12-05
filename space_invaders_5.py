@@ -52,6 +52,7 @@ bonus = [space.Bonus(player.ballImg)]
 
 btnPause = space.Button( [screen.get_size()[0]//2,screen.get_size()[1]//3], 'pause')
 btnLeave = space.Button([screen.get_size()[0]//2,screen.get_size()[1]//1.5], 'leave')
+btnSettings = space.Button([25,25], img=pygame.transform.scale(pygame.image.load('settings.png'), (50, 50)))
 
 gameover = False
 
@@ -73,6 +74,7 @@ running = True # variable pour laisser la fenêtre ouverte
 isPaused = True
 isMenu = True
 isMarket = False
+isSettings = False
 while running : # boucle infinie pour laisser la fenêtre ouverte
     # dessin du fond
     screen.blit(fond,(0,0))
@@ -107,7 +109,7 @@ while running : # boucle infinie pour laisser la fenêtre ouverte
                 player.changeBallTypes(-1)
             if event.key == pygame.K_SPACE : # espace pour tirer
                 player.tirer()
-                if isPaused :pauseSytem()
+                if isPaused and not gameover :pauseSytem()
             if event.key == pygame.K_ESCAPE:pauseSytem()
 
         else:
@@ -172,13 +174,18 @@ while running : # boucle infinie pour laisser la fenêtre ouverte
 
     elif gameover:
         screen.blit(pygame.transform.scale(pygame.image.load('gameover.jpg'), screen.get_size()), (0, 0))
+    elif isSettings:
+        pass
     else:
         screen.blit(pygame.transform.scale(pygame.image.load('control.png'), (300, 300)), (0, screen.get_height()//3))
+        screen.blit(btnSettings.img, btnSettings.pos)
         screen.blit(btnPause.text, btnPause.pos)
         screen.blit(btnLeave.text, btnLeave.pos)
         if pygame.mouse.get_pressed(3)[0]:
             isPaused = btnPause.onClick(isPaused)
             running = btnLeave.onClick(running)
+            isSettings = btnSettings.onClick(running)
+            print(btnSettings.size)
 
     Clock.tick(130)
     pygame.display.update() # pour ajouter tout changement à l'écran
