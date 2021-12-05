@@ -138,7 +138,6 @@ while running : # boucle infinie pour laisser la fenêtre ouverte
         if bonusTime <= pygame.time.get_ticks():
             bonusTime = pygame.time.get_ticks() + random.randint(2000, 5000)
             bonus.append(space.Bonus(player.ballImg))
-            print(bonus)
         player.systemeTir(listeEnnemis)
         # placement des objets
         # le joueur

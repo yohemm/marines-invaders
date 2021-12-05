@@ -40,7 +40,7 @@ class Bonus():
         self.pos = [random.randint(20, 780), -20]
         self.bonus = random.randint(1,3)
         self.quantity = random.choice(nbReload[self.bonus])
-        self.velocity = 0.9
+        self.velocity = 0.6
         self.img = imgDict[self.bonus]
 
     def __repr__(self):
@@ -52,14 +52,13 @@ class Bonus():
     def touchPlayer(self, player):
         if objsTouch(self, player):
             player.reloads[self.bonus] += self.quantity
-            print(player.reloads)
             return True
         else: return False
 
 class Joueur() : # classe pour créer le vaisseau du joueur
     def __init__(self) :
-        self.velovityMax = 6
-        self.speed = 0.2
+        self.velovityMax = 4
+        self.speed = 0.1
         self.velovity = 0
         self.rightPressed = False
         self.leftPressed = False
@@ -72,8 +71,8 @@ class Joueur() : # classe pour créer le vaisseau du joueur
         self.ballType = 1
         self.reloads = {
             1 : 50,
-            2 : 0,
-            3 : 0,
+            2 : 5,
+            3 : 1,
         }
 
         # creation de la balle
@@ -203,12 +202,12 @@ class Ennemi():
         self.pos = [random.randint(100,700), random.randint(-300, -50)]
         self.type = ennemiType
         self.hps = [300, 500, 700]
-        self.velocities = [0.2, 0.1, 0.05]
+        self.velocities = [0.08, 0.06, 0.05]
         self.imgs = [pygame.transform.rotate(pygame.transform.scale(pygame.image.load("invader1.png"), (64,64)), 90), pygame.transform.rotate(pygame.transform.scale(pygame.image.load("invader2.png"), (64,64)), 90), pygame.transform.rotate(pygame.transform.scale(pygame.image.load("invader3.png"), (64,64)), 90)]
         self.img = self.imgs[self.type]
         self.hpMax = self.hps[self.type]
         self.hp = self.hpMax
-        self.vitesse = 0.2
+        self.vitesse = self.velocities[self.type]
 
     def __repr__(self):
         return '<ENNEMIS type : ' + str(self.type) + ' hp : ' + str(self.hp) + '>'
