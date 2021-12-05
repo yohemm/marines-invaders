@@ -14,17 +14,18 @@ class Button():
         font = pygame.font.SysFont('cambria', 30, True)
         self.img = img
         if text != None:
-            self.text = font.render(text, True, [255, 255, 255], [20, 40 , 200])
+            self.text = font.render(text, True, [255, 255, 255])
             self.size = self.text.get_size()
         else:
             self.text = None
         if img != None:
             self.img = img
             self.size = self.img.get_size()
+            print(self.size)
 
         self.pos = [pos[0] - self.size[0]//2, pos[1] - self.size[1]//2]
     
-    def onClick(self, effect = True):
+    def onClick(self, effect = False):
         if self.pos[0] < pygame.mouse.get_pos()[0] < self.pos[0] + self.size[0] and self.pos[1] < pygame.mouse.get_pos()[1] < self.pos[1] + self.size[1]:
             return not effect
         return effect
