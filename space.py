@@ -5,7 +5,8 @@ import pygame  # necessaire pour charger les images et les sons
 import random
 import pickle
 import time
-td = pygame.time.Clock().tick(130)
+
+pygame.time.Clock().tick(60)
 
 pygame.mixer.init()
 class Button():
@@ -21,7 +22,6 @@ class Button():
         if img != None:
             self.img = img
             self.size = self.img.get_size()
-            print(self.size)
 
         self.pos = [pos[0] - self.size[0]//2, pos[1] - self.size[1]//2]
     
@@ -40,14 +40,14 @@ class Bonus():
         self.pos = [random.randint(20, 780), -20]
         self.bonus = random.randint(1,3)
         self.quantity = random.choice(nbReload[self.bonus])
-        self.velocity = 0.6
+        self.velocity = 2
         self.img = imgDict[self.bonus]
 
     def __repr__(self):
         return 'bonus : '+ str(self.bonus) + ' pos : ' + str(self.pos)
 
     def move(self):
-        self.pos = [self.pos[0], self.pos[1]+ self.velocity * td]
+        self.pos = [self.pos[0], self.pos[1]+ self.velocity]
 
     def touchPlayer(self, player):
         if objsTouch(self, player):
@@ -57,8 +57,11 @@ class Bonus():
 
 class Joueur() : # classe pour créer le vaisseau du joueur
     def __init__(self) :
-        self.velovityMax = 4
-        self.speed = 0.1
+        self.hpMax = 300
+        self.hp = self.hpMax
+        self.contactAttack = 10
+        self.velovityMax = 10
+        self.speed = 0.4
         self.velovity = 0
         self.rightPressed = False
         self.leftPressed = False
@@ -101,12 +104,12 @@ class Joueur() : # classe pour créer le vaisseau du joueur
 
     def systemeTir(self, ennemis):
         for idEnnemi, ennemi in enumerate(ennemis):
+            if objsTouch(self, ennemi):
+                ennemi.hp -= self.contactAttack
+                self.hp -= ennemi.contactAttack
             for idTir, tir in enumerate(self.tirs):
                 pos = [tir.pos[0] - (len(self.tirs[idTir].death) // 2 * 50), tir.pos[1]]
                 if tir.toucher(ennemi):
-                    if ennemi.hp <= 0:
-                        del ennemis[idEnnemi]
-                        self.marquer()
                     if tir.type in [1, 2]:
                         pygame.mixer.Sound("touch.wav").play()
                         if tir.type == 2:
@@ -115,10 +118,13 @@ class Joueur() : # classe pour créer le vaisseau du joueur
                                 pos = [pos[0] + 50, pos[1]]
                         del self.tirs[idTir]
                         break
+            if ennemi.hp <= 0:
+                del ennemis[idEnnemi]
+                self.marquer()
 
     def update(self):
         if self.rightPressed and not self.leftPressed:
-            self.velovity += self.speed * td
+            self.velovity += self.speed
             if self.velovity >= self.velovityMax:
                 self.velovity = self.velovityMax
         if not self.rightPressed and self.leftPressed:
@@ -170,10 +176,16 @@ class Balle():
             2: pygame.mixer.Sound("canon.wav"),
             3: pygame.mixer.Sound("anchor.wav"),
         }
+        velocity = {
+            1: 10,
+            2: 5,
+            3: 3,
+        }
         soud[type].play()
         self.img = img
-        self.pos = [pos[0]+16 , pos[1]]
+        self.pos = [pos[0] +50 - (self.img.get_size()[0]//2) , pos[1]]
         self.damage = damages[type]
+        self.velocity = velocity[type]
         self.type = type
         if self.type == 2:
             self.death = [1, 1, 1]
@@ -182,7 +194,7 @@ class Balle():
 
     def bouger(self):
         if self.pos[1]>0:
-            self.pos[1]-=1*td
+            self.pos[1]-= self.velocity
             return True
         else:
             return False
@@ -202,7 +214,8 @@ class Ennemi():
         self.pos = [random.randint(100,700), random.randint(-300, -50)]
         self.type = ennemiType
         self.hps = [300, 500, 700]
-        self.velocities = [0.08, 0.06, 0.05]
+        self.contactAttack = 2
+        self.velocities = [1, 0.5, 0.3]
         self.imgs = [pygame.transform.rotate(pygame.transform.scale(pygame.image.load("invader1.png"), (64,64)), 90), pygame.transform.rotate(pygame.transform.scale(pygame.image.load("invader2.png"), (64,64)), 90), pygame.transform.rotate(pygame.transform.scale(pygame.image.load("invader3.png"), (64,64)), 90)]
         self.img = self.imgs[self.type]
         self.hpMax = self.hps[self.type]
@@ -212,8 +225,11 @@ class Ennemi():
     def __repr__(self):
         return '<ENNEMIS type : ' + str(self.type) + ' hp : ' + str(self.hp) + '>'
 
-    def avancer(self):
-        self.pos[1] += self.vitesse * td
+    def avancer(self, player):
+        if not objsTouch(self, player):
+            self.pos[1] += self.vitesse
+        else:
+            self.pos[1] -= self.vitesse
         if self.pos[1] > 600:return True
         else: return False
 

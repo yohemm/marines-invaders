@@ -5,6 +5,30 @@ import pygame # importation de la librairie pygame
 import space
 import sys # pour fermer correctement l'application
 
+def blitPlayer():
+    screen.blit(player.img, player.pos)  # appel de la fonction qui dessine le vaisseau du joueur
+
+
+    # Bar de point de vie
+    pygame.draw.rect(screen, (255, 100, 100),
+                     (player.pos[0] -10, player.pos[1], 10 , player.img.get_size()[1]))
+    pygame.draw.rect(screen, (00, 255, 00), (
+        player.pos[0] - 10, player.pos[1], 10, player.img.get_size()[1] * (player.hp / player.hpMax)))
+
+    #bar de rechagement de ball
+    nextAttactTime = player.lastAttack + player.attacksSpeed[player.ballType] - pygame.time.get_ticks()
+    if nextAttactTime > 0:
+        pygame.draw.rect(screen, (20, 40, 100), (
+            player.pos[0] + player.img.get_size()[0], player.pos[1], 10, player.img.get_size()[1] * (nextAttactTime/player.attacksSpeed[player.ballType])))
+
+def blitScore():
+    # AFFICHAGE DU SCORE
+    bestScoreText = pygame.font.SysFont('corbel', 40, True).render('meilleur score : ' + str(player.bestScore), True,
+                                                                   [80, 80, 80])
+    screen.blit(bestScoreText, ((screen.get_width() - bestScoreText.get_width()) // 2, 0))
+    scoreText = pygame.font.SysFont('corbel', 40, True).render('score : ' + str(player.score), True, [10, 180, 40])
+    screen.blit(scoreText, (screen.get_width() - scoreText.get_width(), 10))
+
 def pauseSytem():
     global isSettings
     global isPaused
@@ -97,10 +121,12 @@ isMenu = True
 isMarket = False
 isSettings = False
 
+pygame.mouse.set_visible(False)
+
 while running : # boucle infinie pour laisser la fenêtre ouverte
     # dessin du fond
     screen.blit(fond,(0,0))
-    ### Gestion des événements  ###
+    ### Gestion des événements   ###
     for event in pygame.event.get(): # parcours de tous les event pygame dans cette fenêtre
         if event.type == pygame.QUIT : # si l'événement est le clic sur la fermeture de la fenêtre
             f = open('data.pirate', 'w')
@@ -109,12 +135,19 @@ while running : # boucle infinie pour laisser la fenêtre ouverte
             sys.exit() # pour fermer correctement
 
        # gestion du clavier
+
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if isPaused:
+                isPaused = btnPause.onClick(isPaused)
+                running = btnLeave.onClick(running)
+                isSettings = btnSettings.onClick(isSettings)
+                if crossbtn.onClick(): pauseSytem()
         if event.type == pygame.KEYUP : # si une touche a été tapée KEYUP quand on relache la touche
             if event.key == pygame.K_LEFT : # si la touche est la fleche gauche
                 player.leftPressed = False
             if event.key == pygame.K_RIGHT : # si la touche est la fleche droite
                 player.rightPressed = False
-        if event.type == pygame.KEYDOWN : # si une touche a été tapée KEYUP quand on relache la touche
+        elif event.type == pygame.KEYDOWN : # si une touche a été tapée KEYUP quand on relache la touche
             if event.key == pygame.K_LEFT : # si la touche est la fleche gauche
                 player.leftPressed = True
             if event.key == pygame.K_RIGHT : # si la touche est la fleche droite
@@ -149,12 +182,12 @@ while running : # boucle infinie pour laisser la fenêtre ouverte
             if not tir.bouger():
                 del player.tirs[id]
                 break
-                print("bloquer")
-        screen.blit(player.img, player.pos) # appel de la fonction qui dessine le vaisseau du joueur
+        blitPlayer()
+
         # les ennemis
         temp = []
         for ennemi in listeEnnemis:
-            if ennemi.avancer():
+            if ennemi.avancer(player):
                 player.score -= 2
                 pygame.mixer.Sound("hurt.wav").play()
             else: temp.append(ennemi)
@@ -170,26 +203,31 @@ while running : # boucle infinie pour laisser la fenêtre ouverte
                 del bonus[id]
                 break
 
-        #AFFICHAGE DU SCORE
-        bestScoreText = pygame.font.SysFont('corbel', 40, True).render('meilleur score : ' + str(player.bestScore), True, [80, 80, 80])
-        screen.blit(bestScoreText, ((screen.get_width() - bestScoreText.get_width())//2, 0))
-        scoreText = pygame.font.SysFont('corbel', 40, True).render('score : ' + str(player.score), True, [10, 180, 40])
-        screen.blit(scoreText, (screen.get_width() - scoreText.get_width(), 10))
+        blitScore()
+
         ballReloaderText = pygame.font.SysFont('corbel', 40, True).render(str(player.reloads[player.ballType]), True, [80, 80, 80])
         screen.blit(ballReloaderText, (screen.get_width() - ballReloaderText.get_width(), screen.get_height()  - player.ballImg[player.ballType].get_height() - ballReloaderText.get_height()))
         screen.blit(player.ballImg[player.ballType], (screen.get_width() - player.ballImg[player.ballType].get_width(), screen.get_height() - player.ballImg[player.ballType].get_height()))
 
         if len(listeEnnemis) < 1:
-            if player.score > 0:
+            if player.score > 0 and actualyWave + 1 < len(waves):
                 actualyWave += 1
                 waveSpawn(waves[actualyWave])
             else:
                 isPaused = True
                 gameover = True
+        if player.hp <= 0:
+            isPaused = True
+            gameover = True
     else:
 
         if gameover:
-            screen.blit(pygame.transform.scale(pygame.image.load('gameover.jpg'), screen.get_size()), (0, 0))
+
+            if actualyWave >= len(waves) or player.hp <= 0:
+                screen.blit(pygame.transform.scale(pygame.image.load('gameover.jpg'), screen.get_size()), (0, 0))
+            else:
+                blitScore()
+                screen.blit(pygame.transform.scale(pygame.image.load('winScreen.jpg'), screen.get_size()), (0, 0))
         elif isSettings:
             soundBarCursor.topleft = [pygame.mixer.music.get_volume() * soundBar.size[0] + soundBar.x, soundBar.y - 5]
             screen.blit(soudBarText, [soundBar.centerx - soudBarText.get_width()//2 , soundBar.y - 30])
@@ -203,13 +241,8 @@ while running : # boucle infinie pour laisser la fenêtre ouverte
             screen.blit(btnSettings.img, btnSettings.pos)
             screen.blit(btnPause.text, btnPause.pos)
             screen.blit(btnLeave.text, btnLeave.pos)
-            if pygame.mouse.get_pressed(3)[0]:
-                isPaused = btnPause.onClick(isPaused)
-                running = btnLeave.onClick(running)
-                isSettings = btnSettings.onClick(isSettings)
 
         screen.blit(crossbtn.img, crossbtn.pos)
-        if pygame.mouse.get_pressed()[0]:
-            if crossbtn.onClick(): pauseSytem()
-    Clock.tick(130)
+    screen.blit(pygame.transform.scale(pygame.image.load('cursor.png'), (32, 32)), pygame.mouse.get_pos())
+    Clock.tick(60)
     pygame.display.update() # pour ajouter tout changement à l'écran
