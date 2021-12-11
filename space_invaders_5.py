@@ -34,15 +34,22 @@ def pauseSytem():
     global isPaused
     global gameover
     pygame.mixer.Sound("pause.wav").play()
+
+    #reset le jeu en cas de game overt
     if gameover: gameReset()
+    #sors des settings
     elif isSettings: isSettings = not isPaused
+    #sort de paus
     else: isPaused = not isPaused
+
+    #met la musique a jour
     if isPaused:
         pygame.mixer.music.load('musicMenu.mp3')
     else: pygame.mixer.music.load('musicGame.mp3')
     pygame.mixer.music.play(-1)
 
 def waveSpawn(waveToSpawn):
+    #CHANGE DE VAGUE MET A JOUR LA LIST D4ENNEMIS
     for ennemisType in waveToSpawn.keys():
         nb = waveToSpawn[ennemisType]
         for a in range(nb):
@@ -50,6 +57,7 @@ def waveSpawn(waveToSpawn):
             listeEnnemis.append(vaisseau)
 
 def gameReset():
+    #REMET TOUT LES VARIABLE DU JEU A 0
     global player, listeEnnemis, actualyWave, bonusTime, gameover
     player = space.Joueur()
     actualyWave = 0
@@ -74,8 +82,7 @@ player = space.Joueur()
 listeEnnemis = []
 
 actualyWave = 0
-
-waves = [
+waves = [ # differente waves
     {0 : 5, 1 : 0, 2 : 0,},
     {0 : 7, 1 : 1, 2 : 0,},
     {0 : 7, 1 : 2,2 : 0,},
@@ -94,34 +101,35 @@ waves = [
 bonusTime = 0
 bonus = [space.Bonus(player.ballImg)]
 
-crossbtn = space.Button([screen.get_size()[0] - 25, 25], img=pygame.transform.scale(pygame.image.load('cross.png'), (50, 50)))
 
+#BAR SOUND SETTINGS
 soudBarText = font.render('Music :', True, [20, 20, 20])
 soundBar = pygame.rect.Rect(screen.get_size()[0]//2 - 100, screen.get_size()[1]//2 - 20, 200, 20)
 soundBarCursor = pygame.rect.Rect(20, 15, 20, 30)
 
+#BTN MENU
 btnPause = space.Button( [screen.get_size()[0]//2,screen.get_size()[1]//3], 'pause')
 btnLeave = space.Button([screen.get_size()[0]//2,screen.get_size()[1]//1.5], 'leave')
 btnSettings = space.Button([25,25], img=pygame.transform.scale(pygame.image.load('settings.png'), (50, 50)))
+crossbtn = space.Button([screen.get_size()[0] - 25, 25], img=pygame.transform.scale(pygame.image.load('cross.png'), (50, 50)))
 
-gameover = False
 
+#MUSIC MENU
 pygame.mixer.music.load('musicMenu.mp3')
 pygame.mixer.music.play(-1)
 pygame.mixer.music.set_volume(1)
 
-waveSpawn(waves[actualyWave])
+waveSpawn(waves[actualyWave]) # cré la permiere vague
 
 Clock = pygame.time.Clock()
 
 ### BOUCLE DE JEU  ###
 running = True # variable pour laisser la fenêtre ouverte
 isPaused = True
-isMenu = True
-isMarket = False
 isSettings = False
+gameover = False
 
-pygame.mouse.set_visible(False)
+pygame.mouse.set_visible(False) # Curseur windows invisible
 
 while running : # boucle infinie pour laisser la fenêtre ouverte
     # dessin du fond
@@ -138,10 +146,10 @@ while running : # boucle infinie pour laisser la fenêtre ouverte
 
         elif event.type == pygame.MOUSEBUTTONUP:
             if isPaused:
-                isPaused = btnPause.onClick(isPaused)
-                running = btnLeave.onClick(running)
-                isSettings = btnSettings.onClick(isSettings)
-                if crossbtn.onClick(): pauseSytem()
+                isPaused = btnPause.onClick(isPaused) # click sur paus
+                running = btnLeave.onClick(running) #click sur keave
+                isSettings = btnSettings.onClick(isSettings) # click sur settings
+                if crossbtn.onClick(): pauseSytem() # click sur la croix
         if event.type == pygame.KEYUP : # si une touche a été tapée KEYUP quand on relache la touche
             if event.key == pygame.K_LEFT : # si la touche est la fleche gauche
                 player.leftPressed = False
@@ -168,9 +176,9 @@ while running : # boucle infinie pour laisser la fenêtre ouverte
     # Gestions des collisions
 
     if not isPaused:
-        if bonusTime <= pygame.time.get_ticks():
-            bonusTime = pygame.time.get_ticks() + random.randint(2000, 5000)
-            bonus.append(space.Bonus(player.ballImg))
+        if bonusTime <= pygame.time.get_ticks(): # si il est temps de créé un bonus
+            bonusTime = pygame.time.get_ticks() + random.randint(2000, 5000) # nouveau temps du prochain bonus
+            bonus.append(space.Bonus(player.ballImg)) # Cré le bonus
         player.systemeTir(listeEnnemis)
         # placement des objets
         # le joueur
@@ -180,69 +188,73 @@ while running : # boucle infinie pour laisser la fenêtre ouverte
             tir = player.tirs[id]
             screen.blit(tir.img, tir.pos)
             if not tir.bouger():
-                del player.tirs[id]
+                del player.tirs[id] #enlever la balles
                 break
         blitPlayer()
 
         # les ennemis
         temp = []
         for ennemi in listeEnnemis:
-            if ennemi.avancer(player):
+            if ennemi.avancer(player): # si on les ennemis attein le bout
                 player.score -= 2
                 pygame.mixer.Sound("hurt.wav").play()
             else: temp.append(ennemi)
             screen.blit(ennemi.img,ennemi.pos) # appel de la fonction qui dessine le vaisseau du joueur
-            pygame.draw.rect(screen, (100, 100, 100), (ennemi.pos[0], ennemi.pos[1] + ennemi.img.get_size()[1], ennemi.img.get_size()[0], 5))
-            pygame.draw.rect(screen, (00, 255, 00), (ennemi.pos[0], ennemi.pos[1] + ennemi.img.get_size()[1], ennemi.img.get_size()[0]*(ennemi.hp / ennemi.hpMax), 5))
+            pygame.draw.rect(screen, (100, 100, 100), (ennemi.pos[0], ennemi.pos[1] + ennemi.img.get_size()[1], ennemi.img.get_size()[0], 5)) #base de vie max du ennemi
+            pygame.draw.rect(screen, (00, 255, 00), (ennemi.pos[0], ennemi.pos[1] + ennemi.img.get_size()[1], ennemi.img.get_size()[0]*(ennemi.hp / ennemi.hpMax), 5)) #bar de vie actuel du ennemi
         listeEnnemis = temp[:]
         for id in range(len(bonus)):
             singleBonus = bonus[id]
-            singleBonus.move()
-            screen.blit(singleBonus.img, singleBonus.pos)
+            singleBonus.move() #avance les bonus
+            screen.blit(singleBonus.img, singleBonus.pos) # les affiche
             if singleBonus.touchPlayer(player):
-                del bonus[id]
+                del bonus[id] #tue le bonus
                 break
 
         blitScore()
 
-        ballReloaderText = pygame.font.SysFont('corbel', 40, True).render(str(player.reloads[player.ballType]), True, [80, 80, 80])
+        ballReloaderText = pygame.font.SysFont('corbel', 40, True).render(str(player.reloads[player.ballType]), True, [80, 80, 80]) # Numbre de balles
         screen.blit(ballReloaderText, (screen.get_width() - ballReloaderText.get_width(), screen.get_height()  - player.ballImg[player.ballType].get_height() - ballReloaderText.get_height()))
         screen.blit(player.ballImg[player.ballType], (screen.get_width() - player.ballImg[player.ballType].get_width(), screen.get_height() - player.ballImg[player.ballType].get_height()))
 
         if len(listeEnnemis) < 1:
-            if player.score > 0 and actualyWave + 1 < len(waves):
+            if player.score > 0 and actualyWave + 1 < len(waves): # si on a fni la vague
                 actualyWave += 1
                 waveSpawn(waves[actualyWave])
-            else:
+            else: #si on a gagné
                 isPaused = True
                 gameover = True
-        if player.hp <= 0:
+        if player.hp <= 0: # si on est mort on gameover
             isPaused = True
             gameover = True
     else:
-
         if gameover:
-
             if actualyWave >= len(waves) or player.hp <= 0:
+                #perdu
                 screen.blit(pygame.transform.scale(pygame.image.load('gameover.jpg'), screen.get_size()), (0, 0))
             else:
+                #Si on gagne
                 blitScore()
                 screen.blit(pygame.transform.scale(pygame.image.load('winScreen.jpg'), screen.get_size()), (0, 0))
         elif isSettings:
-            soundBarCursor.topleft = [pygame.mixer.music.get_volume() * soundBar.size[0] + soundBar.x, soundBar.y - 5]
+            soundBarCursor.topleft = [pygame.mixer.music.get_volume() * soundBar.size[0] + soundBar.x, soundBar.y - 5] # pos du curseur est celle du niveau du son sur la bar
             screen.blit(soudBarText, [soundBar.centerx - soudBarText.get_width()//2 , soundBar.y - 30])
-            pygame.draw.rect(screen, [25, 10, 200], soundBar)
-            pygame.draw.rect(screen, [30, 30, 39], soundBarCursor)
+            pygame.draw.rect(screen, [25, 10, 200], soundBar) #blit la bar du son
+            pygame.draw.rect(screen, [30, 30, 39], soundBarCursor) # blit l curseur du son
             if pygame.mouse.get_pressed()[0]:
-                if soundBar.topleft[0] < pygame.mouse.get_pos()[0] < soundBar.topleft[0] + soundBar.size[0] and soundBar.topleft[1] < pygame.mouse.get_pos()[1] < soundBar.topleft[1] + soundBar.size[1]:
-                    pygame.mixer.music.set_volume((pygame.mouse.get_pos()[0] - soundBar.left) / soundBar.size[0])
-        else:
-            screen.blit(pygame.transform.scale(pygame.image.load('control.png'), (300, 300)), (0, screen.get_height()//3))
-            screen.blit(btnSettings.img, btnSettings.pos)
-            screen.blit(btnPause.text, btnPause.pos)
-            screen.blit(btnLeave.text, btnLeave.pos)
+                if soundBar.topleft[0] < pygame.mouse.get_pos()[0] < soundBar.topleft[0] + soundBar.size[0] and soundBar.topleft[1] < pygame.mouse.get_pos()[1] < soundBar.topleft[1] + soundBar.size[1]: # si le curseur est sur la bar
+                    pygame.mixer.music.set_volume((pygame.mouse.get_pos()[0] - soundBar.left) / soundBar.size[0]) # change le son
+        else: # Si on est juste en pause
+            screen.blit(pygame.transform.scale(pygame.image.load('control.png'), (300, 300)), (0, screen.get_height()//3)) # image des control
+            screen.blit(btnSettings.img, btnSettings.pos) #btn settings
+            screen.blit(btnPause.text, btnPause.pos) #btn continuer
+            screen.blit(btnLeave.text, btnLeave.pos) #btn leave
 
         screen.blit(crossbtn.img, crossbtn.pos)
+
+
+    #CURSEUR PERSONNALISER
     screen.blit(pygame.transform.scale(pygame.image.load('cursor.png'), (32, 32)), pygame.mouse.get_pos())
+
     Clock.tick(60)
     pygame.display.update() # pour ajouter tout changement à l'écran
