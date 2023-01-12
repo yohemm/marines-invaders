@@ -1,11 +1,28 @@
 # MarinsInvaders
+SpaceInvaders version ocean.
 
-SpaceInvaders version ocean
-## Outils
----
-    - python, pygame
----
-## Support
+## Getting Started
 
-For support, email bloodoffairy@gmail.com .
+### Prerequisites
 
+- Python
+
+### Installation
+
+1. Clone the repository
+```git
+git clone https://github.com/yohemm/marines-invaders.git
+```
+
+2. Install dependencies
+```npm
+pip install pygame
+```
+
+## Usage
+
+1. Oppen main.py
+
+## Authors
+
+* **Yohem** - *Initial work* - [Your GitHub username](https://github.com/yohemm)
