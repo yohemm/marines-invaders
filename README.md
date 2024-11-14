@@ -2,6 +2,15 @@
 # Marins Invaders
 
 <!-- ![Project Banner](path/to/banner/image)  -->
+## 🌟 Project Status
+
+> **Current Status**: **:purple_circle: Finished**
+> 
+> Can have somes bugs
+>
+> No longer maintainer
+
+---
 
 ## Overview
 
